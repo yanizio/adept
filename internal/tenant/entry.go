@@ -39,6 +39,7 @@ type Tenant struct {
 	// Core site objects
 	Meta     meta.Record        // Row from `site`
 	Config   map[string]string  // site_config key→value
+	API      map[string]string  // provider API keys (openai, sendgrid, etc.)
 	DB       *sqlx.DB           // Per-site connection pool
 	Theme    *theme.Theme       // Active theme
 	Renderer *template.Template // Convenience alias: Theme.Renderer
@@ -58,6 +59,14 @@ type Tenant struct {
 // ---------------------------- helpers used elsewhere -------------------------
 
 func (t *Tenant) Host() string { return t.host }
+
+// APIKey returns the API key for a provider, if configured.
+func (t *Tenant) APIKey(provider string) string {
+	if t == nil || t.API == nil {
+		return ""
+	}
+	return t.API[provider]
+}
 
 // AliasCache returns the per-tenant cache, creating it on first use.
 func (t *Tenant) AliasCache() *routing.AliasCache {

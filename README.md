@@ -54,7 +54,7 @@ internal/
   ai/                     # provider‑agnostic Chat or Embed helpers
   config/                 # environment and YAML loader, Vault resolver, validation
   vault/                  # singleton Vault client with renewal loop
-  dbcore/                 # sqlx helpers and migrations
+  database/               # sqlx helpers and migrations
   tenant/                 # meta models and lazy‑load LRU cache
   security/               # IP, UA, Geo rules and shadow mode metrics
   message/                # unified email, SMS, push queue + providers + worker
@@ -62,8 +62,8 @@ internal/
 components/               # first‑class business features
 themes/                   # templates and assets
 conf/                     # global.yaml, security.yaml, and related files
-etc/                      # vault.hcl, policy files, init.sh, run.sh
 logs/                     # daily JSON logs
+sql/                      # install and migration SQL
 ```
 
 ---
@@ -74,12 +74,14 @@ Most tunables live in `conf/global.yaml`.  Any key can be overridden by setting 
 
 | Variable or YAML key       | Example value                                       | Purpose                                |
 | -------------------------- | --------------------------------------------------- | -------------------------------------- |
-| `database.global_dsn`      | `adept:%s@tcp(127.0.0.1:3306)/adept?parseTime=true` | Template DSN, insert password          |
+| `database.global_dsn`      | `adept:%s@tcp(127.0.0.1:3306)/adept?parseTime=true` | MariaDB DSN template, insert password  |
 | `database.global_password` | `vault:secret/adept/global/db#password`             | Secret password resolved through Vault |
 | `http.listen_addr`         | `127.0.0.1:8080`                                    | Bind address                           |
 | `http.force_https`         | `true`                                              | Send a 308 redirect for non‑HTTPS      |
 | `adept_root` *(env only)*  | `/inet`                                             | One‑directory deployment root          |
 | `VAULT_TOKEN` *(env)*      | dynamic                                             | Set by AppRole or other login methods  |
+
+MariaDB is the current and permanent default database.  CockroachDB support is planned for a later cloud deployment mode, and will ship alongside separate schemas and driver wiring when ready.
 
 ---
 

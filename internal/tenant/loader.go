@@ -47,6 +47,12 @@ func loadSite(
 		return nil, err
 	}
 
+	// 2a. API credentials (vault-aware).
+	apiCreds, err := loadAPICreds(ctx, cfg, vcli)
+	if err != nil {
+		return nil, err
+	}
+
 	// 3. resolve password and build DSN
 	key := sanitizeHost(host)
 	pw, err := vcli.GetKV(
@@ -85,6 +91,7 @@ func loadSite(
 	ten := &Tenant{
 		Meta:     *rec,
 		Config:   cfg,
+		API:      apiCreds,
 		DB:       db,
 		Theme:    th,
 		Renderer: th.Renderer,

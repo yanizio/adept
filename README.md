@@ -74,14 +74,14 @@ Most tunables live in `conf/global.yaml`.  Any key can be overridden by setting 
 
 | Variable or YAML key       | Example value                                       | Purpose                                |
 | -------------------------- | --------------------------------------------------- | -------------------------------------- |
-| `database.global_dsn`      | `adept:%s@tcp(127.0.0.1:3306)/adept?parseTime=true` | MariaDB DSN template, insert password  |
+| `database.global_dsn`      | `postgres://adept:%s@127.0.0.1:5432/adept?sslmode=disable` | PostgreSQL DSN template, insert password |
 | `database.global_password` | `vault:secret/adept/global/db#password`             | Secret password resolved through Vault |
 | `http.listen_addr`         | `127.0.0.1:8080`                                    | Bind address                           |
 | `http.force_https`         | `true`                                              | Send a 308 redirect for non‑HTTPS      |
 | `adept_root` *(env only)*  | `/inet`                                             | One‑directory deployment root          |
 | `VAULT_TOKEN` *(env)*      | dynamic                                             | Set by AppRole or other login methods  |
 
-MariaDB is the current and permanent default database.  CockroachDB support is planned for a later cloud deployment mode, and will ship alongside separate schemas and driver wiring when ready.
+PostgreSQL is the current and permanent default database.  CockroachDB support is planned for a later cloud deployment mode, and will ship alongside separate schemas and driver wiring when ready.
 
 ---
 

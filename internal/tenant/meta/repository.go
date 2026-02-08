@@ -63,7 +63,7 @@ func ByHost(ctx context.Context, db *sqlx.DB, host string) (*Record, error) {
         SELECT id, host, theme, locale, routing_mode, route_version,
                preload, suspended_at, deleted_at, created_at, updated_at
         FROM   site
-        WHERE  host = ?
+        WHERE  host = $1
           AND  suspended_at IS NULL
           AND  deleted_at   IS NULL
         LIMIT  1`

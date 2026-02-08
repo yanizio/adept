@@ -27,6 +27,8 @@ package acl
 import (
 	"context"
 	"database/sql"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // UserRoles returns the role *names* bound to userID.  Disabled roles are
@@ -35,7 +37,7 @@ func UserRoles(ctx context.Context, db *sql.DB, userID int64) ([]string, error) 
 	const q = `SELECT r.name
                  FROM user_role ur
                  JOIN role r ON r.id = ur.role_id
-                WHERE ur.user_id = ? AND r.enabled = TRUE`
+                WHERE ur.user_id = $1 AND r.enabled = TRUE`
 
 	rows, err := db.QueryContext(ctx, q, userID)
 	if err != nil {
@@ -63,29 +65,23 @@ func RoleAllowed(ctx context.Context, db *sql.DB, roles []string, component, act
 		return false, nil
 	}
 
-	// Construct the IN clause placeholders dynamically.
-	placeholders := make([]byte, 0, len(roles)*2)
-	args := make([]any, 0, len(roles)+2)
-	for i, r := range roles {
-		if i > 0 {
-			placeholders = append(placeholders, ',')
-		}
-		placeholders = append(placeholders, '?')
-		args = append(args, r)
-	}
-	args = append(args, component, action)
-
 	q := `SELECT 1
             FROM role_acl ra
             JOIN role r ON r.id = ra.role_id
-           WHERE r.name IN (` + string(placeholders) + `)
+           WHERE r.name IN (?)
              AND ra.component = ?
              AND ra.action   = ?
              AND ra.permitted = TRUE
            LIMIT 1` // early exit once we find a hit
 
+	q, args, err := sqlx.In(q, roles, component, action)
+	if err != nil {
+		return false, err
+	}
+	q = sqlx.Rebind(sqlx.DOLLAR, q)
+
 	var dummy int
-	err := db.QueryRowContext(ctx, q, args...).Scan(&dummy)
+	err = db.QueryRowContext(ctx, q, args...).Scan(&dummy)
 	if err == sql.ErrNoRows {
 		return false, nil
 	}

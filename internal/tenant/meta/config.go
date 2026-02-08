@@ -14,7 +14,7 @@
 // --------
 //  1. `ConfigBySite` receives a `context.Context`, a *sqlx.DB pool that is
 //     already in tenant scope, and the `site_id` primary key.
-//  2. It runs one `SELECT key, value FROM site_config WHERE site_id = ?`.
+//  2. It runs one `SELECT "key", value FROM site_config WHERE site_id = $1`.
 //  3. The result rows are copied into a slice of tiny structs, then folded
 //     into a `map[string]string`.
 //  4. The populated map is returned to the caller, ready for in-process
@@ -39,9 +39,9 @@ import (
 // once at tenant warm-up and the result cached.
 func ConfigBySite(ctx context.Context, db *sqlx.DB, siteID uint64) (map[string]string, error) {
 	const q = `
-	    SELECT  ` + "`key`, value" + `
+	    SELECT  "key", value
 	    FROM    site_config
-	    WHERE   site_id = ?`
+	    WHERE   site_id = $1`
 
 	// Small slice cap avoids reallocations when a site uses only a handful
 	// of settings.  It grows automatically for larger sites.

@@ -164,7 +164,7 @@ func Middleware(t AliasTenant) func(http.Handler) http.Handler {
 			err := cache.db.
 				QueryRowContext(r.Context(),
 					`SELECT target_path FROM route_alias
-					  WHERE alias_path = ? LIMIT 1`, r.URL.Path).
+					  WHERE alias_path = $1 LIMIT 1`, r.URL.Path).
 				Scan(&dbTgt)
 
 			switch err {

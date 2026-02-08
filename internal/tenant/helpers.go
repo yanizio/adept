@@ -15,7 +15,7 @@
 //     “site.yaniz.dev” → “siteyanizdev”.  Uses the result of
 //     `resolveLookupHost`.
 //
-//   • `buildTenantDSN`   — produces the MySQL DSN string given the canonical
+//   • `buildTenantDSN`   — produces the PostgreSQL DSN string given the canonical
 //     key and the Vault-resolved password.
 //
 // Notes
@@ -65,15 +65,15 @@ func sanitizeHost(h string) string {
 }
 
 //
-// buildTenantDSN → MySQL DSN
+// buildTenantDSN → PostgreSQL DSN
 //
 
 // buildTenantDSN fills the canonical template:
 //
-//	{key}:{password}@tcp(127.0.0.1:3306)/{key}?parseTime=true&loc=Local
+//	postgres://{key}:{password}@127.0.0.1:5432/{key}?sslmode=disable
 func buildTenantDSN(key, pw string) string {
 	return fmt.Sprintf(
-		"%s:%s@tcp(127.0.0.1:3306)/%s?parseTime=true&loc=Local",
+		"postgres://%s:%s@127.0.0.1:5432/%s?sslmode=disable",
 		key, pw, key,
 	)
 }

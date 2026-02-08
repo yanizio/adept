@@ -98,7 +98,7 @@ func (t *Tenant) fetchEnabledComponents(ctx context.Context) map[string]struct{}
 	}
 
 	rows, err := db.QueryContext(ctx,
-		`SELECT component FROM component_acl WHERE enabled = 1`)
+		`SELECT component FROM component_acl WHERE enabled = TRUE`)
 	if err != nil {
 		if isUnknownTable(err) {
 			return nil // ACL table not yet migrated—treat as “all enabled”.
@@ -120,12 +120,12 @@ func (t *Tenant) fetchEnabledComponents(ctx context.Context) map[string]struct{}
 	return set
 }
 
-// isUnknownTable recognises MariaDB (error 1146) and Cockroach/Postgres (42P01)
-// “table does not exist” errors without importing driver-specific types.
+// isUnknownTable recognises Cockroach/Postgres (42P01) “table does not exist”
+// errors without importing driver-specific types.
 func isUnknownTable(err error) bool {
 	if err == nil {
 		return false
 	}
 	msg := err.Error()
-	return strings.Contains(msg, "1146") || strings.Contains(msg, "42P01")
+	return strings.Contains(msg, "42P01")
 }

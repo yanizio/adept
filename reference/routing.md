@@ -40,7 +40,7 @@ Adept supports **human-friendly URLs** through a flexible aliasing system, as we
 * **Alias Definition:** An alias maps a **public-facing path** to a **target path** (usually an internal component route). Aliases are stored in the `route_alias` table in each tenant’s database, with fields `alias_path` and `target_path`. For example, an alias entry might map `/about` → `/content/page/view/about`. The routing subsystem maintains an in-memory cache of these aliases per tenant for fast lookup. On tenant startup, an `AliasCache` is created with a time-to-live (TTL) (default 5 minutes). The **alias resolution middleware** (`routing.Middleware(t)`) consults this cache on every request:
 
   1. If the incoming `r.URL.Path` exists in the alias map and the cache is fresh, the request path is **rewritten in-place** to the target path. The next handler then sees the altered `r.URL.Path` and continues processing the “real” route. A debug log is emitted for the rewrite showing the from→to mapping.
-  2. If the alias is not in the in-memory map, the middleware performs a one-time SQL lookup: `SELECT target_path FROM route_alias WHERE alias_path = ?`. On a hit, it stores the new alias in the cache and rewrites the request to the target. On a miss (no such alias), the behavior depends on the routing mode:
+  2. If the alias is not in the in-memory map, the middleware performs a one-time SQL lookup: `SELECT target_path FROM route_alias WHERE alias_path = $1`. On a hit, it stores the new alias in the cache and rewrites the request to the target. On a miss (no such alias), the behavior depends on the routing mode:
 
      * In Alias-only mode, a miss results in an immediate 404 Not Found.
      * In Both mode, the request is allowed to proceed with the original URL (which may itself be a direct route).
@@ -304,8 +304,8 @@ For maintainers and developers, here is a quick reference to key files and const
 
 * **Database Schema Definitions:**
 
-  * *`sql/install/mysql.global.sql`* – Creates the `site` table (and global user/auth tables). The `site` table’s columns of interest are `host`, `routing_mode`, `route_version` as described.
-  * *`sql/install/mysql.tenant.sql`* – Creates `component_acl`, `route_alias`, `route_redirect`, `role`, `role_acl`, `user_role` tables. This is a great reference for the exact schema and any default constraints.
+  * *`sql/install/postgres.global.sql`* – Creates the `site` table (and global user/auth tables). The `site` table’s columns of interest are `host`, `routing_mode`, `route_version` as described.
+  * *`sql/install/postgres.tenant.sql`* – Creates `component_acl`, `route_alias`, `route_redirect`, `role`, `role_acl`, `user_role` tables. This is a great reference for the exact schema and any default constraints.
 
 * **Themes and Rendering:** While not strictly routing, it’s worth noting *`internal/theme/manager.go`* and *`internal/view/render.go`*. The Theme manager loads template files for a tenant’s theme. The `view.Render` functions are used by handlers (and widgets) to render HTML. For example, the NotFound handler calls `t.Renderer.ExecuteTemplate(...)` which ultimately comes from the theme’s parsed templates. Routing and rendering are connected in that a route will often choose which template to render based on path or logic.
 

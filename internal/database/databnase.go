@@ -27,7 +27,7 @@ import (
 	"sync"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql" // driver side-effect
+	_ "github.com/jackc/pgx/v5/stdlib" // driver side-effect
 	"github.com/jmoiron/sqlx"
 )
 
@@ -116,7 +116,7 @@ func openWithOptions(ctx context.Context, dsn DSNProvider, opts Options) (*sqlx.
 			return nil, ctx.Err()
 		}
 
-		db, err := sqlx.Open("mysql", dsn())
+		db, err := sqlx.Open("pgx", dsn())
 		if err != nil {
 			lastErr = err
 			goto retry

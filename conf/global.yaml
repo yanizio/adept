@@ -3,7 +3,7 @@ http:
   force_https: true
 
 database:
-  global_dsn:      "adept:%s@tcp(127.0.0.1:3306)/adept?parseTime=true&loc=Local"
+  global_dsn:      "postgres://adept:%s@127.0.0.1:5432/adept?sslmode=disable"
   global_password: "vault:secret/adept/global/db#password"
   password: "1b1H4RgKfFvx1ifk"
   

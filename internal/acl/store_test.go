@@ -22,7 +22,7 @@ func TestUserRoles(t *testing.T) {
 	defer db.Close()
 
 	mock.ExpectQuery(regexp.QuoteMeta(
-		`SELECT r.name FROM user_role ur JOIN role r ON r.id = ur.role_id WHERE ur.user_id = ? AND r.enabled = TRUE`,
+		`SELECT r.name FROM user_role ur JOIN role r ON r.id = ur.role_id WHERE ur.user_id = $1 AND r.enabled = TRUE`,
 	)).
 		WithArgs(int64(42)).
 		WillReturnRows(sqlmock.NewRows([]string{"name"}).AddRow("editor").AddRow("admin"))
@@ -46,8 +46,8 @@ func TestRoleAllowed(t *testing.T) {
 	}
 	defer db.Close()
 
-	inClause := "?,?" // two role names
-	q := `SELECT 1 FROM role_acl ra JOIN role r ON r.id = ra.role_id WHERE r.name IN (` + inClause + `) AND ra.component = ? AND ra.action = ? AND ra.permitted = TRUE LIMIT 1`
+	inClause := "$1,$2" // two role names
+	q := `SELECT 1 FROM role_acl ra JOIN role r ON r.id = ra.role_id WHERE r.name IN (` + inClause + `) AND ra.component = $3 AND ra.action = $4 AND ra.permitted = TRUE LIMIT 1`
 
 	mock.ExpectQuery(regexp.QuoteMeta(q)).
 		WithArgs("editor", "admin", "content", "edit").

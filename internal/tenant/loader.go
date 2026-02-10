@@ -15,6 +15,7 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	"github.com/yanizio/adept/internal/component"
+	"github.com/yanizio/adept/internal/config"
 	"github.com/yanizio/adept/internal/database"
 	"github.com/yanizio/adept/internal/tenant/meta"
 	"github.com/yanizio/adept/internal/theme"
@@ -55,16 +56,24 @@ func loadSite(
 
 	// 3. resolve password and build DSN
 	key := sanitizeHost(host)
+	cfg := config.Get()
+	if cfg == nil {
+		return nil, fmt.Errorf("tenant: config unavailable")
+	}
+	pwPath := fmt.Sprintf(cfg.Database.Tenant.PasswordPath, key)
 	pw, err := vcli.GetKV(
 		ctx,
-		fmt.Sprintf("secret/adept/tenant/%s/db", key),
-		"password",
+		pwPath,
+		cfg.Database.Tenant.PasswordKey,
 		10*time.Minute,
 	)
 	if err != nil {
 		return nil, err
 	}
-	dsn := buildTenantDSN(key, pw)
+	dsn, err := buildTenantDSN(key, pw)
+	if err != nil {
+		return nil, err
+	}
 
 	// 4. tenant DB pool
 	opts := database.Options{

@@ -3,7 +3,21 @@ http:
   force_https: true
 
 database:
-  global_dsn:      "postgres://adept:%s@127.0.0.1:5432/adept?sslmode=disable"
-  global_password: "vault:secret/adept/global/db#password"
+  engine: "postgres"
+  global:
+    host: "127.0.0.1"
+    port: 5432
+    socket_dir: ""
+    name: "adept"
+    user: "adept"
+    password: "vault:secret/adept/global/db#password"
+    sslmode: "disable"
+  tenant:
+    host: "127.0.0.1"
+    port: 5432
+    socket_dir: ""
+    sslmode: "disable"
+    password_path: "secret/adept/tenant/%s/db"
+    password_key: "password"
   password: "1b1H4RgKfFvx1ifk"
   

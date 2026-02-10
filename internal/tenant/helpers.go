@@ -65,15 +65,16 @@ func sanitizeHost(h string) string {
 }
 
 //
-// buildTenantDSN → PostgreSQL DSN
+// buildTenantDSN → PostgreSQL-compatible DSN
 //
 
 // buildTenantDSN fills the canonical template:
 //
 //	postgres://{key}:{password}@127.0.0.1:5432/{key}?sslmode=disable
-func buildTenantDSN(key, pw string) string {
-	return fmt.Sprintf(
-		"postgres://%s:%s@127.0.0.1:5432/%s?sslmode=disable",
-		key, pw, key,
-	)
+func buildTenantDSN(key, pw string) (string, error) {
+	cfg := config.Get()
+	if cfg == nil {
+		return "", fmt.Errorf("tenant: config unavailable")
+	}
+	return cfg.Database.TenantDSN(key, pw)
 }

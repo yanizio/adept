@@ -10,10 +10,10 @@
 // runs with partial, malformed, or missing configuration.
 //
 // The only built-in rule we rely on right now is `required`, attached to
-// fields such as `Database.GlobalDSN` and the newly-added
-// `Database.GlobalPassword`.  Additional custom rules—e.g., “dsn must
-// contain exactly one %s verb” or tenant-name pattern checks—can be
-// registered here as the configuration surface grows.
+// fields such as `Database.Engine` and the various password fields.
+// Additional custom rules—e.g., “DSN must include host or socket” or
+// tenant-name pattern checks—can be registered here as the configuration
+// surface grows.
 //
 // Notes
 // -----
@@ -22,7 +22,11 @@
 
 package config
 
-import "github.com/go-playground/validator/v10"
+import (
+	"fmt"
+
+	"github.com/go-playground/validator/v10"
+)
 
 //
 // validator instance (package-level singleton)
@@ -36,5 +40,32 @@ var v = validator.New()
 
 // validateStruct returns the first validation error, or nil on success.
 func validateStruct(c *Config) error {
-	return v.Struct(c)
+	if err := v.Struct(c); err != nil {
+		return err
+	}
+	return validateDatabase(&c.Database)
+}
+
+func validateDatabase(d *Database) error {
+	if d == nil {
+		return nil
+	}
+
+	if err := validateConnTarget("global", d.Global.Host, d.Global.SocketDir); err != nil {
+		return err
+	}
+	if err := validateConnTarget("tenant", d.Tenant.Host, d.Tenant.SocketDir); err != nil {
+		return err
+	}
+	return nil
+}
+
+func validateConnTarget(label, host, socketDir string) error {
+	if host == "" && socketDir == "" {
+		return fmt.Errorf("database.%s: host or socket_dir must be set", label)
+	}
+	if host != "" && socketDir != "" {
+		return fmt.Errorf("database.%s: set host or socket_dir, not both", label)
+	}
+	return nil
 }

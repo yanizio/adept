@@ -22,7 +22,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -80,7 +79,14 @@ func main() {
 	// 4. Global DB pool (holds cross-tenant + internal tables).
 	dsn := func() string {
 		c := config.Get()
-		return fmt.Sprintf(c.Database.GlobalDSN, c.Database.GlobalPassword)
+		if c == nil {
+			return ""
+		}
+		out, err := c.Database.GlobalDSN()
+		if err != nil {
+			logOut.Fatalw("global DSN build failed", zap.Error(err))
+		}
+		return out
 	}
 	globalDB, err := database.OpenProvider(context.Background(), dsn, database.Options{})
 	if err != nil {

@@ -72,16 +72,45 @@ sql/                      # install and migration SQL
 
 Most tunables live in `conf/global.yaml`.  Any key can be overridden by setting an environment variable with the `ADEPT_` prefix and replacing dots with double underscores (`__`).
 
-| Variable or YAML key       | Example value                                       | Purpose                                |
-| -------------------------- | --------------------------------------------------- | -------------------------------------- |
-| `database.global_dsn`      | `postgres://adept:%s@127.0.0.1:5432/adept?sslmode=disable` | PostgreSQL DSN template, insert password |
-| `database.global_password` | `vault:secret/adept/global/db#password`             | Secret password resolved through Vault |
-| `http.listen_addr`         | `127.0.0.1:8080`                                    | Bind address                           |
-| `http.force_https`         | `true`                                              | Send a 308 redirect for non‑HTTPS      |
-| `adept_root` *(env only)*  | `/inet`                                             | One‑directory deployment root          |
-| `VAULT_TOKEN` *(env)*      | dynamic                                             | Set by AppRole or other login methods  |
+| Variable or YAML key             | Example value                                      | Purpose                                |
+| ------------------------------- | -------------------------------------------------- | -------------------------------------- |
+| `database.engine`               | `postgres`                                         | Database engine selector               |
+| `database.global.host`          | `127.0.0.1`                                        | Global DB host (TCP)                   |
+| `database.global.socket_dir`    | `/var/run/postgresql`                              | Global DB socket directory             |
+| `database.global.name`          | `adept`                                            | Global DB name                         |
+| `database.global.user`          | `adept`                                            | Global DB user                         |
+| `database.global.password`      | `vault:secret/adept/global/db#password`            | Global DB password from Vault          |
+| `database.tenant.host`          | `127.0.0.1`                                        | Tenant DB host (TCP)                   |
+| `database.tenant.socket_dir`    | `/var/run/postgresql`                              | Tenant DB socket directory             |
+| `database.tenant.password_path` | `secret/adept/tenant/%s/db`                        | Tenant DB Vault path template          |
+| `database.tenant.password_key`  | `password`                                         | Tenant DB Vault key                    |
+| `http.listen_addr`              | `127.0.0.1:8080`                                   | Bind address                           |
+| `http.force_https`              | `true`                                             | Send a 308 redirect for non‑HTTPS      |
+| `adept_root` *(env only)*       | `/inet`                                            | One‑directory deployment root          |
+| `VAULT_TOKEN` *(env)*           | dynamic                                            | Set by AppRole or other login methods  |
+
+Unix socket example (`conf/global.yaml`):
+
+```yaml
+database:
+  engine: "postgres"
+  global:
+    socket_dir: "/var/run/postgresql"
+    name: "adept"
+    user: "adept"
+    password: "vault:secret/adept/global/db#password"
+    sslmode: "disable"
+  tenant:
+    socket_dir: "/var/run/postgresql"
+    sslmode: "disable"
+    password_path: "secret/adept/tenant/%s/db"
+    password_key: "password"
+```
 
 PostgreSQL is the current and permanent default database.  CockroachDB support is planned for a later cloud deployment mode, and will ship alongside separate schemas and driver wiring when ready.
+
+**Upgrade Note**
+If you previously set `database.global_dsn` and `database.global_password`, replace them with the nested `database.global.*` fields above and set `database.engine`. The DSN is now built from structured fields rather than a format string.
 
 ---
 

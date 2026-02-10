@@ -41,19 +41,41 @@ type HTTP struct {
 // Database section
 //
 
-// Database holds DSN templates and secrets.
+// Database holds the selected engine and connection details.
 //
-//   - *Global* DSN template (`GlobalDSN`) stays in YAML so operators can
-//     tweak host, port, or flags without touching Vault.
-//   - *Global* password (`GlobalPassword`) is stored in Vault and injected
-//     at runtime, keeping credentials out of flat files and git history.
+//   - *Engine* selects postgres or cockroach.
+//   - *Global* includes the global database name and credentials.
+//   - *Tenant* includes connection details plus Vault path for per-tenant
+//     passwords.
 //   - *LocalhostAlias* lets dev instances map the host string "localhost"
 //     to a unique schema/user key (default "devlocal") so they do not
 //     collide with production names.
 type Database struct {
-	GlobalDSN      string `koanf:"global_dsn"      validate:"required"`
-	GlobalPassword string `koanf:"global_password" validate:"required"`
-	LocalhostAlias string `koanf:"localhost_alias" validate:"omitempty"`
+	Engine         string       `koanf:"engine"          validate:"required,oneof=postgres cockroach"`
+	Global         DBConnection `koanf:"global"          validate:"required"`
+	Tenant         TenantDB     `koanf:"tenant"          validate:"required"`
+	LocalhostAlias string       `koanf:"localhost_alias" validate:"omitempty"`
+}
+
+// DBConnection holds connection details for a single database.
+type DBConnection struct {
+	Host      string `koanf:"host"       validate:"omitempty"`
+	Port      int    `koanf:"port"       validate:"omitempty,min=1,max=65535"`
+	SocketDir string `koanf:"socket_dir" validate:"omitempty"`
+	Name      string `koanf:"name"       validate:"required"`
+	User      string `koanf:"user"       validate:"required"`
+	Password  string `koanf:"password"   validate:"required"`
+	SSLMode   string `koanf:"sslmode"    validate:"omitempty,oneof=disable require verify-ca verify-full"`
+}
+
+// TenantDB holds tenant connection details and Vault lookup hints.
+type TenantDB struct {
+	Host         string `koanf:"host"          validate:"omitempty"`
+	Port         int    `koanf:"port"          validate:"omitempty,min=1,max=65535"`
+	SocketDir    string `koanf:"socket_dir"    validate:"omitempty"`
+	SSLMode      string `koanf:"sslmode"       validate:"omitempty,oneof=disable require verify-ca verify-full"`
+	PasswordPath string `koanf:"password_path" validate:"required"`
+	PasswordKey  string `koanf:"password_key"  validate:"required"`
 }
 
 //

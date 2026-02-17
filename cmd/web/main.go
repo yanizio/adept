@@ -70,7 +70,7 @@ func main() {
 		zap.L().Fatal("logger init failed", zap.Error(err))
 	}
 
-	// 3. Vault client (AppRole token is already exported at startup by daemon).
+	// 3. Vault client (token-file auth preferred, AppRole fallback).
 	vaultCli, err := vault.New(context.Background(), logOut.Debugf)
 	if err != nil {
 		logOut.Fatalw("vault init failed", zap.Error(err))

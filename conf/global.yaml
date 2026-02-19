@@ -5,13 +5,13 @@ http:
 database:
   engine: "postgres"
   global:
-    host: "127.0.0.1"
-    port: 5432
+    host: "vault:kv/global/databases/main#host"
+    port: "vault:kv/global/databases/main#port"
     socket_dir: ""
-    name: "adept"
-    user: "adept"
-    password: "vault:secret/adept/global/db#password"
-    sslmode: "disable"
+    name: "vault:kv/global/databases/main#database"
+    user: "vault:kv/global/databases/main#username"
+    password: "vault:kv/global/databases/main#password"
+    sslmode: "vault:kv/global/databases/main#sslmode"
   tenant:
     host: "127.0.0.1"
     port: 5432

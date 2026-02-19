@@ -40,6 +40,7 @@ const (
 type authMode string
 
 const (
+	authModeTokenEnv  authMode = "token_env"
 	authModeTokenFile authMode = "token_file"
 	authModeAppRole   authMode = "approle"
 )
@@ -55,6 +56,7 @@ type Client struct {
 	logFn func(string, ...any)
 
 	authMode  authMode
+	token     string
 	tokenFile string
 	roleID    string
 	secretID  string
@@ -77,6 +79,7 @@ type cached struct {
 // ------------------------
 // • VAULT_ADDR       – HTTPS Vault address, e.g. https://vault.example:8200.
 // • VAULT_CACERT     – optional PEM CA file path for Vault TLS verification.
+// • VAULT_TOKEN      – direct token for local/dev use.
 // • VAULT_TOKEN_FILE – preferred token source from Vault Agent sink file.
 // • VAULT_ROLE_ID + VAULT_SECRET_ID – AppRole fallback when token file is unset.
 func New(ctx context.Context, logFn func(string, ...any)) (*Client, error) {
@@ -103,6 +106,7 @@ func New(ctx context.Context, logFn func(string, ...any)) (*Client, error) {
 		api:       apiCli,
 		logFn:     logFn,
 		authMode:  env.mode,
+		token:     env.token,
 		tokenFile: env.tokenFile,
 		roleID:    env.roleID,
 		secretID:  env.secretID,
@@ -189,6 +193,7 @@ func (c *Client) getKV(ctx context.Context, secretPath, key string) (string, err
 type vaultEnv struct {
 	addr      string
 	caCert    string
+	token     string
 	tokenFile string
 	roleID    string
 	secretID  string
@@ -199,6 +204,7 @@ func loadAndValidateEnv() (vaultEnv, error) {
 	env := vaultEnv{
 		addr:      strings.TrimSpace(os.Getenv("VAULT_ADDR")),
 		caCert:    strings.TrimSpace(os.Getenv("VAULT_CACERT")),
+		token:     strings.TrimSpace(os.Getenv("VAULT_TOKEN")),
 		tokenFile: strings.TrimSpace(os.Getenv("VAULT_TOKEN_FILE")),
 		roleID:    strings.TrimSpace(os.Getenv("VAULT_ROLE_ID")),
 		secretID:  strings.TrimSpace(os.Getenv("VAULT_SECRET_ID")),
@@ -217,13 +223,18 @@ func loadAndValidateEnv() (vaultEnv, error) {
 		}
 	}
 
+	if env.token != "" {
+		env.mode = authModeTokenEnv
+		return env, nil
+	}
+
 	if env.tokenFile != "" {
 		env.mode = authModeTokenFile
 		return env, nil
 	}
 
 	if env.roleID == "" || env.secretID == "" {
-		return vaultEnv{}, fmt.Errorf("missing Vault auth env vars: set VAULT_TOKEN_FILE (preferred) or set both VAULT_ROLE_ID and VAULT_SECRET_ID")
+		return vaultEnv{}, fmt.Errorf("missing Vault auth env vars: set VAULT_TOKEN (dev), VAULT_TOKEN_FILE, or set both VAULT_ROLE_ID and VAULT_SECRET_ID")
 	}
 	env.mode = authModeAppRole
 	return env, nil
@@ -259,6 +270,9 @@ func buildConfig(env vaultEnv) (*vault.Config, error) {
 
 func (c *Client) initialAuth(ctx context.Context) error {
 	switch c.authMode {
+	case authModeTokenEnv:
+		c.api.SetToken(c.token)
+		return nil
 	case authModeTokenFile:
 		return c.reloadTokenFromFile()
 	case authModeAppRole:

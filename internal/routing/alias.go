@@ -100,6 +100,9 @@ func (c *AliasCache) lookup(path string) (string, bool) {
 func (c *AliasCache) store(path, target string) {
 	c.mu.Lock()
 	c.data[path] = target
+	if c.loadedAt.IsZero() {
+		c.loadedAt = time.Now()
+	}
 	c.mu.Unlock()
 }
 

@@ -43,28 +43,28 @@ func loadSite(
 	}
 
 	// 2. key-value config
-	cfg, err := meta.ConfigBySite(ctx, global, rec.ID)
+	siteCfg, err := meta.ConfigBySite(ctx, global, rec.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	// 2a. API credentials (vault-aware).
-	apiCreds, err := loadAPICreds(ctx, cfg, vcli)
+	apiCreds, err := loadAPICreds(ctx, siteCfg, vcli)
 	if err != nil {
 		return nil, err
 	}
 
 	// 3. resolve password and build DSN
 	key := sanitizeHost(host)
-	cfg := config.Get()
-	if cfg == nil {
+	globalCfg := config.Get()
+	if globalCfg == nil {
 		return nil, fmt.Errorf("tenant: config unavailable")
 	}
-	pwPath := fmt.Sprintf(cfg.Database.Tenant.PasswordPath, key)
+	pwPath := fmt.Sprintf(globalCfg.Database.Tenant.PasswordPath, key)
 	pw, err := vcli.GetKV(
 		ctx,
 		pwPath,
-		cfg.Database.Tenant.PasswordKey,
+		globalCfg.Database.Tenant.PasswordKey,
 		10*time.Minute,
 	)
 	if err != nil {
@@ -99,7 +99,7 @@ func loadSite(
 	// Assemble Tenant
 	ten := &Tenant{
 		Meta:     *rec,
-		Config:   cfg,
+		Config:   siteCfg,
 		API:      apiCreds,
 		DB:       db,
 		Theme:    th,

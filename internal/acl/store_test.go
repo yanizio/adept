@@ -46,7 +46,7 @@ func TestRoleAllowed(t *testing.T) {
 	}
 	defer db.Close()
 
-	inClause := "$1,$2" // two role names
+	inClause := "$1, $2" // two role names
 	q := `SELECT 1 FROM role_acl ra JOIN role r ON r.id = ra.role_id WHERE r.name IN (` + inClause + `) AND ra.component = $3 AND ra.action = $4 AND ra.permitted = TRUE LIMIT 1`
 
 	mock.ExpectQuery(regexp.QuoteMeta(q)).

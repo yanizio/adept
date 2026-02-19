@@ -7,7 +7,7 @@
 // `Load()` builds one immutable `Config` struct from three layers (highest
 // precedence last):
 //
-//  1. Optional `.env` file — first `<root>/conf/.env`, then jail-wide fallback.
+//  1. Optional `.env` files at known locations under the project root.
 //  2. `conf/global.yaml`.
 //  3. Environment variables prefixed `ADEPT_`, where `__` maps to “.”
 //     (e.g., `ADEPT_HTTP__LISTEN_ADDR → http.listen_addr`).
@@ -105,18 +105,17 @@ func rootDir() string {
 // caches Config.  It is safe for concurrent use.
 func Load() (*Config, error) {
 	ctx := context.Background()
+	root := rootDir()
+
+	// Load dotenv values before Vault init so Vault env vars can come from .env.
+	loadDotEnv(root)
+	zap.S().Debugw("config root resolved", "root", root)
 
 	// Fail fast if Vault is unreachable.
 	if err := ensureVault(ctx); err != nil {
 		zap.S().Errorw("vault init failed", "err", err)
 		return nil, err
 	}
-
-	root := rootDir()
-	zap.S().Debugw("config root resolved", "root", root)
-
-	// .env (optional, no error if missing)
-	_ = godotenv.Load(filepath.Join(root, "conf", ".env"))
 
 	k := koanf.New(".")
 
@@ -168,6 +167,26 @@ func Get() *Config  { return current.Load() }
 func Reload() error { _, err := Load(); return err }
 
 /*──────────────────── Vault URI resolver ───────────────────────────────────*/
+
+func loadDotEnv(root string) {
+	candidates := []string{
+		filepath.Join(root, ".env"),
+		filepath.Join(root, "conf", ".env"),
+		filepath.Join(root, "Readme", ".env"),
+	}
+
+	for _, p := range candidates {
+		fi, err := os.Stat(p)
+		if err != nil || fi.IsDir() {
+			continue
+		}
+		if err := godotenv.Load(p); err != nil {
+			zap.S().Warnw("dotenv load failed", "file", p, "err", err)
+			continue
+		}
+		zap.S().Debugw("dotenv loaded", "file", p)
+	}
+}
 
 func resolveVaultURIs(ctx context.Context, k *koanf.Koanf) error {
 	const prefix = "vault:"

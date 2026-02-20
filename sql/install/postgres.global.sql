@@ -35,6 +35,9 @@ CREATE TABLE site (
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+INSERT INTO `site` (`host`) VALUES ('yaniz.dev');
+INSERT INTO `site` (`host`) VALUES ('yaniz.int');
+
 CREATE TRIGGER site_set_updated_at
 BEFORE UPDATE ON site
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();

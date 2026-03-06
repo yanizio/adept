@@ -112,14 +112,18 @@ func runStore(fd *FormDef, p map[string]any, data map[string]any, actx ActionCtx
 	}
 
 	db := database.Conn(actx.Ctx)
+	if db == nil {
+		return fmt.Errorf("store action: database connection unavailable")
+	}
 	j, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
+	q := db.Rebind(fmt.Sprintf(`INSERT INTO %s (form_id, submitted_at, data) VALUES (?,?,?)`, table))
 
 	_, err = db.ExecContext(
 		actx.Ctx,
-		fmt.Sprintf(`INSERT INTO %s (form_id, submitted_at, data) VALUES ($1,$2,$3)`, table),
+		q,
 		fd.ID,
 		time.Now().UTC(),
 		j,

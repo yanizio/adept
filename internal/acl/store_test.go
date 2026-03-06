@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/jmoiron/sqlx"
 )
 
 func TestUserRoles(t *testing.T) {
@@ -20,6 +21,7 @@ func TestUserRoles(t *testing.T) {
 		t.Fatalf("sqlmock: %v", err)
 	}
 	defer db.Close()
+	xdb := sqlx.NewDb(db, "postgres")
 
 	mock.ExpectQuery(regexp.QuoteMeta(
 		`SELECT r.name FROM user_role ur JOIN role r ON r.id = ur.role_id WHERE ur.user_id = $1 AND r.enabled = TRUE`,
@@ -27,7 +29,7 @@ func TestUserRoles(t *testing.T) {
 		WithArgs(int64(42)).
 		WillReturnRows(sqlmock.NewRows([]string{"name"}).AddRow("editor").AddRow("admin"))
 
-	got, err := UserRoles(context.Background(), db, 42)
+	got, err := UserRoles(context.Background(), xdb, 42)
 	if err != nil {
 		t.Fatalf("UserRoles error: %v", err)
 	}
@@ -45,6 +47,7 @@ func TestRoleAllowed(t *testing.T) {
 		t.Fatalf("sqlmock: %v", err)
 	}
 	defer db.Close()
+	xdb := sqlx.NewDb(db, "postgres")
 
 	inClause := "$1, $2" // two role names
 	q := `SELECT 1 FROM role_acl ra JOIN role r ON r.id = ra.role_id WHERE r.name IN (` + inClause + `) AND ra.component = $3 AND ra.action = $4 AND ra.permitted = TRUE LIMIT 1`
@@ -53,7 +56,7 @@ func TestRoleAllowed(t *testing.T) {
 		WithArgs("editor", "admin", "content", "edit").
 		WillReturnRows(sqlmock.NewRows([]string{"1"}).AddRow(1))
 
-	ok, err := RoleAllowed(context.Background(), db,
+	ok, err := RoleAllowed(context.Background(), xdb,
 		[]string{"editor", "admin"}, "content", "edit")
 	if err != nil {
 		t.Fatalf("RoleAllowed error: %v", err)

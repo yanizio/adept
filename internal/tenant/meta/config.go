@@ -14,7 +14,8 @@
 // --------
 //  1. `ConfigBySite` receives a `context.Context`, a *sqlx.DB pool that is
 //     already in tenant scope, and the `site_id` primary key.
-//  2. It runs one `SELECT "key", value FROM site_config WHERE site_id = $1`.
+//  2. It runs one `SELECT "key", value FROM site_config WHERE site_id = ?`
+//     and rebinds placeholders for the active SQL dialect.
 //  3. The result rows are copied into a slice of tiny structs, then folded
 //     into a `map[string]string`.
 //  4. The populated map is returned to the caller, ready for in-process
@@ -41,7 +42,7 @@ func ConfigBySite(ctx context.Context, db *sqlx.DB, siteID uint64) (map[string]s
 	const q = `
 	    SELECT  "key", value
 	    FROM    site_config
-	    WHERE   site_id = $1`
+	    WHERE   site_id = ?`
 
 	// Small slice cap avoids reallocations when a site uses only a handful
 	// of settings.  It grows automatically for larger sites.
@@ -50,7 +51,7 @@ func ConfigBySite(ctx context.Context, db *sqlx.DB, siteID uint64) (map[string]s
 		Value string `db:"value"`
 	}, 0, 8)
 
-	if err := db.SelectContext(ctx, &rows, q, siteID); err != nil {
+	if err := db.SelectContext(ctx, &rows, db.Rebind(q), siteID); err != nil {
 		return nil, err
 	}
 

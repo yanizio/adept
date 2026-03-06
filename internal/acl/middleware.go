@@ -36,8 +36,7 @@ func RequireRole(names ...string) func(http.Handler) http.Handler {
 				return
 			}
 
-			// NOTE: t.GetDB() is *sqlx.DB.  Pass its .DB field.
-			roles, err := UserRoles(r.Context(), t.GetDB().DB, uid)
+			roles, err := UserRoles(r.Context(), t.GetDB(), uid)
 			if err != nil {
 				zap.L().Error("acl user roles", zap.Error(err))
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -69,14 +68,14 @@ func RequirePermission(component, action string) func(http.Handler) http.Handler
 				return
 			}
 
-			roles, err := UserRoles(r.Context(), t.GetDB().DB, uid)
+			roles, err := UserRoles(r.Context(), t.GetDB(), uid)
 			if err != nil {
 				zap.L().Error("acl user roles", zap.Error(err))
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
 			}
 
-			allowed, err := RoleAllowed(r.Context(), t.GetDB().DB, roles, component, action)
+			allowed, err := RoleAllowed(r.Context(), t.GetDB(), roles, component, action)
 			if err != nil {
 				zap.L().Error("acl role allowed", zap.Error(err))
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

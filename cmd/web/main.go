@@ -77,6 +77,10 @@ func main() {
 	}
 
 	// 4. Global DB pool (holds cross-tenant + internal tables).
+	if err := database.SetEngine(cfg.Database.Engine); err != nil {
+		logOut.Fatalw("database engine config failed", zap.Error(err))
+	}
+
 	dsn := func() string {
 		c := config.Get()
 		if c == nil {

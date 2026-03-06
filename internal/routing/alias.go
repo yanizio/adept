@@ -30,6 +30,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/yanizio/adept/internal/database"
 	"go.uber.org/zap"
 )
 
@@ -164,11 +165,11 @@ func Middleware(t AliasTenant) func(http.Handler) http.Handler {
 
 			// 2️⃣  First-hit SQL fallback
 			var dbTgt string
-			err := cache.db.
-				QueryRowContext(r.Context(),
-					`SELECT target_path FROM route_alias
-					  WHERE alias_path = $1 LIMIT 1`, r.URL.Path).
-				Scan(&dbTgt)
+			err := cache.db.QueryRowContext(r.Context(),
+				database.Rebind(`SELECT target_path FROM route_alias
+					  WHERE alias_path = ? LIMIT 1`),
+				r.URL.Path,
+			).Scan(&dbTgt)
 
 			switch err {
 			case nil:

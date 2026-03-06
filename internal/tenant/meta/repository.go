@@ -63,12 +63,12 @@ func ByHost(ctx context.Context, db *sqlx.DB, host string) (*Record, error) {
         SELECT id, host, theme, locale, routing_mode, route_version,
                preload, suspended_at, deleted_at, created_at, updated_at
         FROM   site
-        WHERE  host = $1
+        WHERE  host = ?
           AND  suspended_at IS NULL
           AND  deleted_at   IS NULL
         LIMIT  1`
 	var rec Record
-	if err := db.GetContext(ctx, &rec, q, host); err != nil {
+	if err := db.GetContext(ctx, &rec, db.Rebind(q), host); err != nil {
 		// TODO(bjy): replace stdlib log with project logger once observability
 		// package lands.
 		log.Printf("meta.ByHost: host=%q err=%v", host, err)

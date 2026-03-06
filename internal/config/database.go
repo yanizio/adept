@@ -4,7 +4,7 @@
 //
 // Notes
 // -----
-// • Uses URL-style DSNs compatible with pgx/libpq.
+// • Uses driver-compatible DSNs for PostgreSQL/Cockroach and MariaDB.
 // • Supports TCP and Unix-socket connections.
 // • Oxford commas, two spaces after periods.
 
@@ -13,6 +13,9 @@ package config
 import (
 	"fmt"
 	"net/url"
+	"strings"
+
+	mysql "github.com/go-sql-driver/mysql"
 )
 
 // GlobalDSN builds the DSN for the global database.
@@ -43,14 +46,19 @@ type connSpec struct {
 }
 
 func buildDSN(engine, user, password, dbname string, spec connSpec) (string, error) {
-	if engine != "postgres" && engine != "cockroach" {
+	eng := strings.ToLower(strings.TrimSpace(engine))
+	if eng != "postgres" && eng != "cockroach" && eng != "mariadb" && eng != "mysql" {
 		return "", fmt.Errorf("database: unsupported engine %q", engine)
+	}
+
+	if eng == "mariadb" || eng == "mysql" {
+		return buildMySQLDSN(user, password, dbname, spec), nil
 	}
 
 	sslmode := spec.SSLMode
 	if sslmode == "" {
 		sslmode = "disable"
-		if engine == "cockroach" {
+		if eng == "cockroach" {
 			sslmode = "require"
 		}
 	}
@@ -75,7 +83,7 @@ func buildDSN(engine, user, password, dbname string, spec connSpec) (string, err
 	}
 	port := spec.Port
 	if port == 0 {
-		if engine == "cockroach" {
+		if eng == "cockroach" {
 			port = 26257
 		} else {
 			port = 5432
@@ -85,4 +93,46 @@ func buildDSN(engine, user, password, dbname string, spec connSpec) (string, err
 	u.Host = fmt.Sprintf("%s:%d", host, port)
 	u.RawQuery = q.Encode()
 	return u.String(), nil
+}
+
+func buildMySQLDSN(user, password, dbname string, spec connSpec) string {
+	host := spec.Host
+	if host == "" {
+		host = "127.0.0.1"
+	}
+
+	port := spec.Port
+	if port == 0 {
+		port = 3306
+	}
+
+	netProto := "tcp"
+	addr := fmt.Sprintf("%s:%d", host, port)
+	if spec.SocketDir != "" {
+		netProto = "unix"
+		addr = spec.SocketDir
+	}
+
+	params := map[string]string{
+		"parseTime": "true",
+		"charset":   "utf8mb4",
+	}
+	if spec.SSLMode != "" {
+		switch spec.SSLMode {
+		case "disable":
+			params["tls"] = "false"
+		case "require", "verify-ca", "verify-full":
+			params["tls"] = "true"
+		}
+	}
+
+	cfg := mysql.Config{
+		User:   user,
+		Passwd: password,
+		Net:    netProto,
+		Addr:   addr,
+		DBName: dbname,
+		Params: params,
+	}
+	return cfg.FormatDSN()
 }

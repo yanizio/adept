@@ -24,9 +24,13 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql" // driver side-effect
 	_ "github.com/jackc/pgx/v5/stdlib" // driver side-effect
 	"github.com/jmoiron/sqlx"
 )
@@ -76,6 +80,54 @@ func (dst *Options) merge() {
 // rotate credentials dynamically.
 type DSNProvider func() string
 
+// Engine identifies which SQL dialect/driver should be used.
+type Engine string
+
+const (
+	EnginePostgres  Engine = "postgres"
+	EngineCockroach Engine = "cockroach"
+	EngineMariaDB   Engine = "mariadb"
+	EngineMySQL     Engine = "mysql"
+)
+
+var (
+	activeDriver   atomic.Value // string
+	activeBindType atomic.Int32 // sqlx bind kind
+)
+
+func init() {
+	activeDriver.Store("pgx")
+	activeBindType.Store(int32(sqlx.DOLLAR))
+}
+
+// SetEngine configures global SQL dialect details used by OpenProvider and
+// Rebind().
+func SetEngine(engine string) error {
+	drv, bind, err := dialectFor(engine)
+	if err != nil {
+		return err
+	}
+	activeDriver.Store(drv)
+	activeBindType.Store(int32(bind))
+	return nil
+}
+
+// Rebind rewrites a QUESTION-bind query (`?`) for the active SQL dialect.
+func Rebind(query string) string {
+	return sqlx.Rebind(int(activeBindType.Load()), query)
+}
+
+func dialectFor(engine string) (driver string, bindType int, err error) {
+	switch Engine(strings.ToLower(strings.TrimSpace(engine))) {
+	case EnginePostgres, EngineCockroach:
+		return "pgx", sqlx.DOLLAR, nil
+	case EngineMariaDB, EngineMySQL:
+		return "mysql", sqlx.QUESTION, nil
+	default:
+		return "", 0, fmt.Errorf("database: unsupported engine %q", engine)
+	}
+}
+
 //
 // Public dial helpers (unchanged interface)
 //
@@ -116,7 +168,11 @@ func openWithOptions(ctx context.Context, dsn DSNProvider, opts Options) (*sqlx.
 			return nil, ctx.Err()
 		}
 
-		db, err := sqlx.Open("pgx", dsn())
+		drv, _ := activeDriver.Load().(string)
+		if drv == "" {
+			drv = "pgx"
+		}
+		db, err := sqlx.Open(drv, dsn())
 		if err != nil {
 			lastErr = err
 			goto retry

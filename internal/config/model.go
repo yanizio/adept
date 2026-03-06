@@ -43,7 +43,7 @@ type HTTP struct {
 
 // Database holds the selected engine and connection details.
 //
-//   - *Engine* selects postgres or cockroach.
+//   - *Engine* selects postgres, cockroach, or mariadb.
 //   - *Global* includes the global database name and credentials.
 //   - *Tenant* includes connection details plus Vault path for per-tenant
 //     passwords.
@@ -51,7 +51,7 @@ type HTTP struct {
 //     to a unique schema/user key (default "devlocal") so they do not
 //     collide with production names.
 type Database struct {
-	Engine         string       `koanf:"engine"          validate:"required,oneof=postgres cockroach"`
+	Engine         string       `koanf:"engine"          validate:"required,oneof=postgres cockroach mariadb mysql"`
 	Global         DBConnection `koanf:"global"          validate:"required"`
 	Tenant         TenantDB     `koanf:"tenant"          validate:"required"`
 	LocalhostAlias string       `koanf:"localhost_alias" validate:"omitempty"`

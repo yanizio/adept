@@ -33,13 +33,13 @@ import (
 
 // UserRoles returns the role *names* bound to userID.  Disabled roles are
 // filtered out.
-func UserRoles(ctx context.Context, db *sql.DB, userID int64) ([]string, error) {
+func UserRoles(ctx context.Context, db *sqlx.DB, userID int64) ([]string, error) {
 	const q = `SELECT r.name
                  FROM user_role ur
                  JOIN role r ON r.id = ur.role_id
-                WHERE ur.user_id = $1 AND r.enabled = TRUE`
+                WHERE ur.user_id = ? AND r.enabled = TRUE`
 
-	rows, err := db.QueryContext(ctx, q, userID)
+	rows, err := db.QueryContext(ctx, db.Rebind(q), userID)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func UserRoles(ctx context.Context, db *sql.DB, userID int64) ([]string, error) 
 // given component + action.  It executes one query using IN (? … ?).
 //
 // Empty roles slice returns false, nil.
-func RoleAllowed(ctx context.Context, db *sql.DB, roles []string, component, action string) (bool, error) {
+func RoleAllowed(ctx context.Context, db *sqlx.DB, roles []string, component, action string) (bool, error) {
 	if len(roles) == 0 {
 		return false, nil
 	}
@@ -78,7 +78,7 @@ func RoleAllowed(ctx context.Context, db *sql.DB, roles []string, component, act
 	if err != nil {
 		return false, err
 	}
-	q = sqlx.Rebind(sqlx.DOLLAR, q)
+	q = db.Rebind(q)
 
 	var dummy int
 	err = db.QueryRowContext(ctx, q, args...).Scan(&dummy)

@@ -30,7 +30,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/yanizio/adept/internal/database"
+	"github.com/yanizio/adept/internal/platform/data/database"
 	"go.uber.org/zap"
 )
 

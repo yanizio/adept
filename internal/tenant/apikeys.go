@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yanizio/adept/internal/vault"
+	"github.com/yanizio/adept/internal/platform/data/vault"
 )
 
 const apiConfigPrefix = "api."

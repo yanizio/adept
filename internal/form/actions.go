@@ -24,9 +24,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yanizio/adept/internal/database"
-	"github.com/yanizio/adept/internal/logger"
 	"github.com/yanizio/adept/internal/message"
+	"github.com/yanizio/adept/internal/platform/data/database"
+	"github.com/yanizio/adept/internal/platform/logging"
 )
 
 // ActionCtx carries request-scoped helpers for action execution.
@@ -176,14 +176,14 @@ func runPDF(_ *FormDef, _ map[string]any, _ map[string]any, _ ActionCtx) error {
 // -----------------------------------------------------------------------------
 
 func logErr(actx ActionCtx, formID, action string, err error) {
-	logger.FromContext(actx.Ctx).Error(
+	logging.FromContext(actx.Ctx).Error(
 		"form action failed",
 		"form", formID, "action", action, "error", err.Error(),
 	)
 }
 
 func logWarn(actx ActionCtx, formID, action, msg string) {
-	logger.FromContext(actx.Ctx).Warn(
+	logging.FromContext(actx.Ctx).Warn(
 		"form action warning",
 		"form", formID, "action", action, "warning", msg,
 	)

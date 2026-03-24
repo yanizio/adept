@@ -16,10 +16,10 @@ import (
 
 	"github.com/yanizio/adept/internal/component"
 	"github.com/yanizio/adept/internal/config"
-	"github.com/yanizio/adept/internal/database"
+	"github.com/yanizio/adept/internal/platform/data/database"
+	"github.com/yanizio/adept/internal/platform/data/vault"
 	"github.com/yanizio/adept/internal/tenant/meta"
 	"github.com/yanizio/adept/internal/theme"
-	"github.com/yanizio/adept/internal/vault"
 )
 
 //

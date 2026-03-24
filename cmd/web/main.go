@@ -35,13 +35,13 @@ import (
 	_ "github.com/yanizio/adept/components/example" // sample component
 
 	"github.com/yanizio/adept/internal/config"
-	"github.com/yanizio/adept/internal/database"
 	"github.com/yanizio/adept/internal/form"
-	"github.com/yanizio/adept/internal/logger"
 	"github.com/yanizio/adept/internal/middleware"
+	"github.com/yanizio/adept/internal/platform/data/database"
+	"github.com/yanizio/adept/internal/platform/data/vault"
+	"github.com/yanizio/adept/internal/platform/logging"
 	"github.com/yanizio/adept/internal/server"
 	"github.com/yanizio/adept/internal/tenant"
-	"github.com/yanizio/adept/internal/vault"
 )
 
 // runningInTTY returns true when stdout is a character device (dev mode).
@@ -65,7 +65,7 @@ func main() {
 	}
 
 	// 2. Structured JSON logger (rotates daily, colorizes in TTY).
-	logOut, err := logger.New(cfg.Paths.Root, runningInTTY())
+	logOut, err := logging.New(cfg.Paths.Root, runningInTTY())
 	if err != nil {
 		zap.L().Fatal("logger init failed", zap.Error(err))
 	}

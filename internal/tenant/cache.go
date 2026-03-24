@@ -40,7 +40,7 @@ import (
 	"golang.org/x/sync/singleflight"
 
 	"github.com/yanizio/adept/internal/metrics"
-	"github.com/yanizio/adept/internal/vault"
+	"github.com/yanizio/adept/internal/platform/data/vault"
 )
 
 /*────────────────────────── tunables / errors ──────────────────────────────*/

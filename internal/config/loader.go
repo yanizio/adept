@@ -47,7 +47,7 @@ import (
 	"github.com/knadh/koanf/providers/file"
 	koanf "github.com/knadh/koanf/v2"
 
-	adepvault "github.com/yanizio/adept/internal/vault"
+	adepvault "github.com/yanizio/adept/internal/platform/data/vault"
 	"go.uber.org/zap"
 )
 

@@ -29,7 +29,7 @@ import (
 
 	"github.com/yanizio/adept/internal/component"
 	"github.com/yanizio/adept/internal/form"
-	"github.com/yanizio/adept/internal/session"
+	platformauth "github.com/yanizio/adept/internal/platform/auth"
 	"github.com/yanizio/adept/internal/tenant"
 	"github.com/yanizio/adept/internal/view"
 )
@@ -108,7 +108,7 @@ func (c *Component) handleLoginPOST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session.LoginUser(w, r, email)
+	platformauth.LoginUser(w, r, email)
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 

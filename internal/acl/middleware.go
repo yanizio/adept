@@ -9,7 +9,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/yanizio/adept/internal/auth"
+	"github.com/yanizio/adept/internal/platform/auth"
 	"github.com/yanizio/adept/internal/tenant"
 )
 

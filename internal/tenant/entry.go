@@ -16,10 +16,10 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
+	"github.com/yanizio/adept/internal/platform/data/vault"
 	"github.com/yanizio/adept/internal/routing"
 	"github.com/yanizio/adept/internal/tenant/meta"
 	"github.com/yanizio/adept/internal/theme"
-	"github.com/yanizio/adept/internal/vault"
 )
 
 //

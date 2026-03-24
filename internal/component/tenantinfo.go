@@ -3,8 +3,8 @@ package component
 
 import (
 	"github.com/jmoiron/sqlx"
+	"github.com/yanizio/adept/internal/platform/data/vault"
 	"github.com/yanizio/adept/internal/theme"
-	"github.com/yanizio/adept/internal/vault"
 )
 
 // TenantInfo exposes per-tenant resources to Components during Init.

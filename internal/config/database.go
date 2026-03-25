@@ -126,13 +126,14 @@ func buildMySQLDSN(user, password, dbname string, spec connSpec) string {
 		}
 	}
 
-	cfg := mysql.Config{
-		User:   user,
-		Passwd: password,
-		Net:    netProto,
-		Addr:   addr,
-		DBName: dbname,
-		Params: params,
-	}
+	// Start from driver defaults so auth plugin flags stay compatible with
+	// MySQL/MariaDB servers (notably AllowNativePasswords=true).
+	cfg := mysql.NewConfig()
+	cfg.User = user
+	cfg.Passwd = password
+	cfg.Net = netProto
+	cfg.Addr = addr
+	cfg.DBName = dbname
+	cfg.Params = params
 	return cfg.FormatDSN()
 }

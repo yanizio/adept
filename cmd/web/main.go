@@ -81,6 +81,12 @@ func main() {
 		logOut.Fatalw("database engine config failed", zap.Error(err))
 	}
 
+	logOut.Infof("Connecting to: %s", cfg.Database.Global.Host)
+	logOut.Infof("Port: %d", cfg.Database.Global.Port)
+	logOut.Infof("Database: %s", cfg.Database.Global.Name)
+	logOut.Infof("Username: %s", cfg.Database.Global.User)
+	logOut.Infof("SSL Mode: %s", cfg.Database.Global.SSLMode)
+
 	dsn := func() string {
 		c := config.Get()
 		if c == nil {
@@ -94,8 +100,10 @@ func main() {
 	}
 	globalDB, err := database.OpenProvider(context.Background(), dsn, database.Options{})
 	if err != nil {
+		logOut.Infow("global DB connection status", "status", "Fail")
 		logOut.Fatalw("global DB connect failed", zap.Error(err))
 	}
+	logOut.Infow("global DB connection status", "status", "Success")
 	defer globalDB.Close()
 
 	// 5. Load *all* YAML-defined forms now so widgets can render later.

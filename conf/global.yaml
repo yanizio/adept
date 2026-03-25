@@ -3,7 +3,7 @@ http:
   force_https: true
 
 database:
-  engine: "postgres"
+  engine: "mysql"
   global:
     host: "vault:kv/global/databases/main#host"
     port: "vault:kv/global/databases/main#port"

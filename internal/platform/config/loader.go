@@ -1,4 +1,4 @@
-// internal/config/loader.go
+// internal/platform/config/loader.go
 //
 // Configuration loader and hot-reloader with Vault support.
 //

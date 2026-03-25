@@ -34,9 +34,9 @@ import (
 	_ "github.com/yanizio/adept/components/auth"    // auth routes + widgets
 	_ "github.com/yanizio/adept/components/example" // sample component
 
-	"github.com/yanizio/adept/internal/config"
 	"github.com/yanizio/adept/internal/form"
 	"github.com/yanizio/adept/internal/middleware"
+	"github.com/yanizio/adept/internal/platform/config"
 	"github.com/yanizio/adept/internal/platform/data/database"
 	"github.com/yanizio/adept/internal/platform/data/vault"
 	"github.com/yanizio/adept/internal/platform/logging"

@@ -1,4 +1,4 @@
-// internal/config/database.go
+// internal/platform/config/database.go
 //
 // Database DSN builders.
 //

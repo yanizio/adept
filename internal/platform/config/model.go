@@ -1,11 +1,11 @@
-// internal/config/model.go
+// internal/platform/config/model.go
 //
 // Typed configuration model for Adept.
 //
 // Context
 // -------
 // These structs define the shape of the configuration tree that
-// `internal/config/loader.go` builds from three overlay layers:
+// `internal/platform/config/loader.go` builds from three overlay layers:
 //
 //   • optional `.env`                         – dotenv values,
 //   • `conf/global.yaml`                      – primary static file,

@@ -1,10 +1,10 @@
-// internal/config/validator.go
+// internal/platform/config/validator.go
 //
 // Thin wrapper around go-playground/validator.
 //
 // Context
 // -------
-// `internal/config/loader.go` calls `validateStruct` immediately after it
+// `internal/platform/config/loader.go` calls `validateStruct` immediately after it
 // unmarshals the merged Koanf tree into a `Config` instance.  Any tag
 // mismatch or validation error aborts startup, ensuring the binary never
 // runs with partial, malformed, or missing configuration.

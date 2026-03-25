@@ -30,7 +30,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/yanizio/adept/internal/config"
+	"github.com/yanizio/adept/internal/platform/config"
 )
 
 //
